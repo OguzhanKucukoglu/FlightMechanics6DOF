@@ -1,8 +1,0 @@
-# ninja log v6
-15	100	8044500983433235	CMakeFiles/FlightEngine.dir/src/Quaternion.cpp.obj	5a303b2280475a31
-10	102	8044500983390449	CMakeFiles/FlightEngine.dir/src/Vector3D.cpp.obj	4b4eeadc63f5aa52
-6	401	8044500983343096	CMakeFiles/FlightEngine.dir/src/main.cpp.obj	11b5215cfdd79e4a
-16	95	8044505753849124	CMakeFiles/FlightEngine.dir/src/Quaternion.cpp.obj	5a303b2280475a31
-11	96	8044505753796701	CMakeFiles/FlightEngine.dir/src/Vector3D.cpp.obj	4b4eeadc63f5aa52
-6	397	8044505753746139	CMakeFiles/FlightEngine.dir/src/main.cpp.obj	11b5215cfdd79e4a
-397	668	8044505757654478	FlightEngine.exe	fb30d9d5b472f56f

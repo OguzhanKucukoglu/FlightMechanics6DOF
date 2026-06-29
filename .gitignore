@@ -1,0 +1,13 @@
+# Visual Studio Cache
+.vs/
+
+# Build and Output Folders
+out/
+build/
+bin/
+
+# Compiled Binaries and Objects
+*.exe
+*.obj
+*.pdb
+*.lib
