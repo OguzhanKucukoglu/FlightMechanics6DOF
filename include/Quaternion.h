@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector3D.h"
 
 class Quaternion{
 public:
@@ -13,4 +14,17 @@ public:
 
 	Quaternion operator+(const Quaternion& q) const;
 	Quaternion operator*(double scalar) const;
+
+	Quaternion conjugate() const {
+		return Quaternion(w, -x, -y, -z);
+	}
+
+	Vector3D rotate(const Vector3D& v) const {
+
+		Quaternion q_vec(0.0, v.x, v.y, v.z); // Vektörü saf kuaterniyon yap
+
+		Quaternion q_res = (*this) * q_vec * this->conjugate();
+
+		return Vector3D(q_res.x, q_res.y, q_res.z);
+	}
 };

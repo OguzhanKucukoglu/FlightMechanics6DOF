@@ -1,9 +1,12 @@
 #include "Rocket.h"
+#include <algorithm>
 
-Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double Ixx, double Iyy, double Izz, const State& initial_state)
+Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double Ixx, double Iyy, double Izz, const State& initial_state)
 	: dryMass(dry_m),
 	referenceArea(s_ref),
 	referenceLength(l_ref),
+	thrustMagnitude(magnitude),
+	massFlowRate(flow_rate),
 	emptyIxx(Ixx),
 	emptyIyy(Iyy),
 	emptyIzz(Izz),
@@ -32,6 +35,15 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 	Vector3D gravity(0.0, -9.81, 0.0);
 	Vector3D netForce = gravity;
 
+	Vector3D localThrust(thrustMagnitude, 0.0, 0.0);
+
+	if (currentFuelMass > 0.0) {
+		
+		Vector3D worldThrust = state.orientation.rotate(localThrust);
+
+		netForce = netForce + worldThrust;
+	}
+
 	double mass = getTotalMass();
 	output.acceleration = netForce * (1.0 / mass);
 
@@ -54,6 +66,8 @@ void Rocket::integrate(double dt) {
 	Derivative netDerivative = (k1 + (k2 * 2.0) + (k3 * 2.0) + k4) * (1.0 / 6.0);
 
 	currentState = stepState(currentState, netDerivative, dt);
+
+	currentFuelMass = std::max(0.0, currentFuelMass - massFlowRate * dt);
 }
 
 Matrix3x3 Rocket::getInertiaTensor() const {
