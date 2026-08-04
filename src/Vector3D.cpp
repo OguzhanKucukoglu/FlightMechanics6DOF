@@ -25,7 +25,7 @@ Vector3D Vector3D::crossProduct(const Vector3D& v) const {
 
 	return Vector3D(
 		(y * v.z) - (z * v.y),
-		(z * v.x) - (x - v.z),
+		(z * v.x) - (x * v.z),
 		(x * v.y) - (y * v.x)
 	);
 }

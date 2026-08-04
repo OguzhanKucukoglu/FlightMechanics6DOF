@@ -9,6 +9,7 @@ private:
 	const double referenceLength; // L_ref (m)
 	const double thrustMagnitude; // Motor itki kuvveti (Newton)
 	const double massFlowRate; // Saniyede tüketilen yakýt (kg/s)
+	const double dragCoefficient;
 
 	const double emptyIxx;
 	const double emptyIyy;
@@ -26,7 +27,7 @@ private:
 
 public:
 
-	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double Ixx, double Iyy, double Izz, const State& initial_state);
+	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double Ixx, double Iyy, double Izz, const State& initial_state);
 
 	double getTotalMass() const;
 

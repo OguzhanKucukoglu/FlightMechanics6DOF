@@ -1,12 +1,14 @@
 #include "Rocket.h"
 #include <algorithm>
+#include <cmath>
 
-Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double Ixx, double Iyy, double Izz, const State& initial_state)
+Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double Ixx, double Iyy, double Izz, const State& initial_state)
 	: dryMass(dry_m),
 	referenceArea(s_ref),
 	referenceLength(l_ref),
 	thrustMagnitude(magnitude),
 	massFlowRate(flow_rate),
+	dragCoefficient(drag_coeff),
 	emptyIxx(Ixx),
 	emptyIyy(Iyy),
 	emptyIzz(Izz),
@@ -19,11 +21,39 @@ double Rocket::getTotalMass() const {
 	return dryMass + currentFuelMass;
 }
 
+double getAtmosphericDensity(double altitude) {
+
+	if (altitude < 0.0) {
+		return 1.225;
+	}
+
+	if (altitude < 11000.0) {
+		double temperature = 15.04 - (0.00649 * altitude);
+
+		double pressure = 101.29 * std::pow((temperature + 273.1) / 288.08, 5.256);
+
+		return pressure / (0.2869 * (temperature + 273.1));
+	}
+	else if (altitude < 25000.0) {
+		double temperature = -56.46;
+
+		double pressure = 22.65 * std::exp(1.73 - (0.000157 * altitude));
+
+		return pressure / (0.2869 * (temperature + 273.1));
+	}
+	else {
+		return 0.0;
+	}
+
+}
+
 Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt) const {
 
 	State state = stepState(initial, d, dt);
 
 	Derivative output;
+
+	double mass = getTotalMass();
 
 	output.velocity = state.velocity;
 
@@ -33,21 +63,34 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 	output.spin.z = 0.5 * (state.orientation.w * state.angularVelocity.z + state.orientation.x * state.angularVelocity.y - state.orientation.y * state.angularVelocity.x);
 
 	Vector3D gravity(0.0, -9.81, 0.0);
-	Vector3D netForce = gravity;
-
-	Vector3D localThrust(thrustMagnitude, 0.0, 0.0);
+	Vector3D netForce = gravity * mass;
+	Vector3D netTorque(0.0, 0.0, 0.0);
 
 	if (currentFuelMass > 0.0) {
-		
+		Vector3D localThrust(thrustMagnitude, 0.0, 0.0);
 		Vector3D worldThrust = state.orientation.rotate(localThrust);
 
 		netForce = netForce + worldThrust;
 	}
 
-	double mass = getTotalMass();
+	double v_mag = state.velocity.magnitude();
+	if (v_mag > 1e-9) {
+
+		double rho = getAtmosphericDensity(state.position.y);
+		double dragMag = 0.5 * rho * v_mag * v_mag * dragCoefficient * referenceArea;
+
+		Vector3D dragVector = state.velocity.normalized() * (-dragMag);
+
+		netForce = netForce + dragVector;
+
+		Vector3D localDrag = state.orientation.conjugate().rotate(dragVector);
+		Vector3D cpVector(-1.5, 0.0, 0.0);
+		Vector3D aeroTorque = cpVector.crossProduct(localDrag);
+		netTorque = netTorque + aeroTorque;
+	}
+
 	output.acceleration = netForce * (1.0 / mass);
 
-	Vector3D netTorque(0.0, 0.0, 0.0);
 	Matrix3x3 inverseTensor = getInverseInertiaTensor();
 	output.angularAcceleration = inverseTensor * netTorque;
 
