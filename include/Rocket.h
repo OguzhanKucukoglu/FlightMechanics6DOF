@@ -11,11 +11,14 @@ private:
 	const double massFlowRate; // Saniyede tüketilen yakýt (kg/s)
 	const double dragCoefficient;
 
-	const double emptyIxx;
-	const double emptyIyy;
-	const double emptyIzz;
+	const double emptyIxx, emptyIyy, emptyIzz;
+	const double fullIxx, fullIyy, fullIzz;
 
+	const double emptyCG_X;
+	const double fullCG_X;
+	
 	double currentFuelMass;
+	const double initialFuelMass;
 	
 	State currentState;
 
@@ -27,9 +30,11 @@ private:
 
 public:
 
-	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double Ixx, double Iyy, double Izz, const State& initial_state);
+	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, const State& initial_state);
 
 	double getTotalMass() const;
+
+	double getCurrentCG() const;
 
 	State getState() const { return currentState; }
 	void setState(const State& newState) { currentState = newState; }

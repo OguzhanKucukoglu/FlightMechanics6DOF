@@ -21,7 +21,7 @@ public:
 
 	Vector3D rotate(const Vector3D& v) const {
 
-		Quaternion q_vec(0.0, v.x, v.y, v.z); // Vektörü saf kuaterniyon yap
+		Quaternion q_vec(0.0, v.x, v.y, v.z);
 
 		Quaternion q_res = (*this) * q_vec * this->conjugate();
 

@@ -2,17 +2,23 @@
 #include <algorithm>
 #include <cmath>
 
-Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double Ixx, double Iyy, double Izz, const State& initial_state)
+Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, const State& initial_state)
 	: dryMass(dry_m),
 	referenceArea(s_ref),
 	referenceLength(l_ref),
 	thrustMagnitude(magnitude),
 	massFlowRate(flow_rate),
 	dragCoefficient(drag_coeff),
-	emptyIxx(Ixx),
-	emptyIyy(Iyy),
-	emptyIzz(Izz),
+	emptyIxx(empty_ixx),
+	emptyIyy(empty_iyy),
+	emptyIzz(empty_izz),
+	fullIxx(full_ixx),
+	fullIyy(full_iyy),
+	fullIzz(full_izz),
+	emptyCG_X(empty_cg_x),
+	fullCG_X(full_cg_x),
 	currentFuelMass(fuel_m),
+	initialFuelMass(fuel_m),
 	currentState(initial_state)
 { }
 
@@ -45,6 +51,18 @@ double getAtmosphericDensity(double altitude) {
 		return 0.0;
 	}
 
+}
+
+double Rocket::getCurrentCG() const {
+
+	double fuelRatio = 0.0;
+	if (initialFuelMass > 1e-9) {
+		fuelRatio = currentFuelMass / initialFuelMass;
+	}
+
+	double currentCG_X = emptyCG_X + (fullCG_X - emptyCG_X) * fuelRatio;
+
+	return currentCG_X;
 }
 
 Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt) const {
@@ -84,8 +102,15 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 		netForce = netForce + dragVector;
 
 		Vector3D localDrag = state.orientation.conjugate().rotate(dragVector);
-		Vector3D cpVector(-1.5, 0.0, 0.0);
+
+		double currentCG_X = getCurrentCG();
+
+		double currentCP_X = -2.5;
+
+		Vector3D cpVector(currentCP_X - currentCG_X, 0.0, 0.0);
+
 		Vector3D aeroTorque = cpVector.crossProduct(localDrag);
+
 		netTorque = netTorque + aeroTorque;
 	}
 
@@ -117,9 +142,18 @@ Matrix3x3 Rocket::getInertiaTensor() const {
 
 	Matrix3x3 tensor;
 
-	tensor.m[0][0] = emptyIxx;
-	tensor.m[1][1] = emptyIyy;
-	tensor.m[2][2] = emptyIzz;
+	double fuelRatio = 0.0;
+	if (initialFuelMass > 1e-9) {
+		fuelRatio = currentFuelMass / initialFuelMass;
+	}
+
+	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;
+	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
+	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
+
+	tensor.m[0][0] = currentIxx;
+	tensor.m[1][1] = currentIyy;
+	tensor.m[2][2] = currentIzz;
 
 	return tensor;
 }
@@ -128,9 +162,18 @@ Matrix3x3 Rocket::getInverseInertiaTensor() const {
 
 	Matrix3x3 inverseTensor;
 
-	inverseTensor.m[0][0] = 1.0 / emptyIxx;
-	inverseTensor.m[1][1] = 1.0 / emptyIyy;
-	inverseTensor.m[2][2] = 1.0 / emptyIzz;
+	double fuelRatio = 0.0;
+	if (initialFuelMass > 1e-9) {
+		fuelRatio = currentFuelMass / initialFuelMass;
+	}
+
+	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;
+	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
+	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
+
+	inverseTensor.m[0][0] = 1.0 / currentIxx;
+	inverseTensor.m[1][1] = 1.0 / currentIyy;
+	inverseTensor.m[2][2] = 1.0 / currentIzz;
 
 	return inverseTensor;
 }
