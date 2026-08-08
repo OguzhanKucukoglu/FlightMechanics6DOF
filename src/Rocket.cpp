@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, const State& initial_state)
+Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state)
 	: dryMass(dry_m),
 	referenceArea(s_ref),
 	referenceLength(l_ref),
@@ -17,6 +17,9 @@ Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double m
 	fullIzz(full_izz),
 	emptyCG_X(empty_cg_x),
 	fullCG_X(full_cg_x),
+	engine_X(engineX),
+	gimbal_Y(0.0),
+	gimbal_Z(0.0),
 	currentFuelMass(fuel_m),
 	initialFuelMass(fuel_m),
 	currentState(initial_state)
@@ -85,10 +88,22 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 	Vector3D netTorque(0.0, 0.0, 0.0);
 
 	if (currentFuelMass > 0.0) {
-		Vector3D localThrust(thrustMagnitude, 0.0, 0.0);
-		Vector3D worldThrust = state.orientation.rotate(localThrust);
+		
+		double tvc_x = thrustMagnitude * std::cos(gimbal_Y) * std::cos(gimbal_Z);
+		double tvc_y = thrustMagnitude * std::sin(gimbal_Y);
+		double tvc_z = thrustMagnitude * std::sin(gimbal_Z);
 
+		Vector3D localThrust(tvc_x, tvc_y, tvc_z);
+
+		Vector3D worldThrust = state.orientation.rotate(localThrust);
 		netForce = netForce + worldThrust;
+
+		double currentCG_X = getCurrentCG();
+		Vector3D engineMomentArm(engine_X - currentCG_X, 0.0, 0.0);
+
+		Vector3D tvcTorque = engineMomentArm.crossProduct(localThrust);
+
+		netTorque = netTorque + tvcTorque;
 	}
 
 	double v_mag = state.velocity.magnitude();
