@@ -148,6 +148,8 @@ void Rocket::integrate(double dt) {
 
 	Derivative netDerivative = (k1 + (k2 * 2.0) + (k3 * 2.0) + k4) * (1.0 / 6.0);
 
+	currentAcceleration = netDerivative.acceleration;
+
 	currentState = stepState(currentState, netDerivative, dt);
 
 	currentFuelMass = std::max(0.0, currentFuelMass - massFlowRate * dt);

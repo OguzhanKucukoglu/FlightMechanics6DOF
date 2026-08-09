@@ -23,6 +23,8 @@ private:
 	
 	double currentFuelMass;
 	const double initialFuelMass;
+
+	Vector3D currentAcceleration;
 	
 	State currentState;
 
@@ -44,4 +46,6 @@ public:
 	void setState(const State& newState) { currentState = newState; }
 
 	void integrate(double dt);
+
+	Vector3D getCurrentAcceleration() const { return currentAcceleration; }
 };
