@@ -1,6 +1,6 @@
 #include <iostream>
-#include "IMU.h"
-#include "Rocket.h"
+#include "sensors/IMU.h"
+#include "vehicle/Rocket.h"
 
 using namespace std;
 

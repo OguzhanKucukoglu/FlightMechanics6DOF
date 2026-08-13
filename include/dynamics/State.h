@@ -1,6 +1,6 @@
 #pragma once
-#include "Vector3D.h"
-#include "Quaternion.h"
+#include "math/Vector3D.h"
+#include "math/Quaternion.h"
 
 struct State {
 	Vector3D position; // Konum (m)

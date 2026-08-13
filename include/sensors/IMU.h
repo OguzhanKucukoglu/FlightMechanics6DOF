@@ -1,6 +1,6 @@
 #pragma once
-#include "Vector3D.h"
-#include "State.h"
+#include "math/Vector3D.h"
+#include "dynamics/State.h"
 #include <random>
 
 struct IMU_Measurement {

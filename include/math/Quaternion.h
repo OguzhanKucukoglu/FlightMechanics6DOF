@@ -1,5 +1,5 @@
 #pragma once
-#include "Vector3D.h"
+#include "math/Vector3D.h"
 
 class Quaternion{
 public:
@@ -27,4 +27,6 @@ public:
 
 		return Vector3D(q_res.x, q_res.y, q_res.z);
 	}
+
+	Quaternion getDerivative(const Vector3D& angularVelocity);
 };

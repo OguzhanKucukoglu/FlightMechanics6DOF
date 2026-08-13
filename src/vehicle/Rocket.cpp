@@ -1,4 +1,5 @@
-#include "Rocket.h"
+#include "vehicle/Rocket.h"
+#include "environment/Atmosphere.h"
 #include <algorithm>
 #include <cmath>
 
@@ -30,32 +31,6 @@ double Rocket::getTotalMass() const {
 	return dryMass + currentFuelMass;
 }
 
-double getAtmosphericDensity(double altitude) {
-
-	if (altitude < 0.0) {
-		return 1.225;
-	}
-
-	if (altitude < 11000.0) {
-		double temperature = 15.04 - (0.00649 * altitude);
-
-		double pressure = 101.29 * std::pow((temperature + 273.1) / 288.08, 5.256);
-
-		return pressure / (0.2869 * (temperature + 273.1));
-	}
-	else if (altitude < 25000.0) {
-		double temperature = -56.46;
-
-		double pressure = 22.65 * std::exp(1.73 - (0.000157 * altitude));
-
-		return pressure / (0.2869 * (temperature + 273.1));
-	}
-	else {
-		return 0.0;
-	}
-
-}
-
 double Rocket::getCurrentCG() const {
 
 	double fuelRatio = 0.0;
@@ -78,11 +53,8 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 	output.velocity = state.velocity;
 
-	output.spin.w = 0.5 * (-state.orientation.x * state.angularVelocity.x - state.orientation.y * state.angularVelocity.y - state.orientation.z * state.angularVelocity.z);
-	output.spin.x = 0.5 * (state.orientation.w * state.angularVelocity.x + state.orientation.y * state.angularVelocity.z - state.orientation.z * state.angularVelocity.y);
-	output.spin.y = 0.5 * (state.orientation.w * state.angularVelocity.y - state.orientation.x * state.angularVelocity.z + state.orientation.z * state.angularVelocity.x);
-	output.spin.z = 0.5 * (state.orientation.w * state.angularVelocity.z + state.orientation.x * state.angularVelocity.y - state.orientation.y * state.angularVelocity.x);
-
+	output.spin = state.orientation.getDerivative(state.angularVelocity);
+	
 	Vector3D gravity(0.0, -9.81, 0.0);
 	Vector3D netForce = gravity * mass;
 	Vector3D netTorque(0.0, 0.0, 0.0);
@@ -109,7 +81,9 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 	double v_mag = state.velocity.magnitude();
 	if (v_mag > 1e-9) {
 
-		double rho = getAtmosphericDensity(state.position.y);
+		// TODO: NED çerçevesine geçildiðinde irtifa '-state.position.z' olacak.
+		AtmosphericData env = Atmosphere::getConditions(state.position.y);
+		double rho = env.density;
 		double dragMag = 0.5 * rho * v_mag * v_mag * dragCoefficient * referenceArea;
 
 		Vector3D dragVector = state.velocity.normalized() * (-dragMag);
@@ -153,26 +127,6 @@ void Rocket::integrate(double dt) {
 	currentState = stepState(currentState, netDerivative, dt);
 
 	currentFuelMass = std::max(0.0, currentFuelMass - massFlowRate * dt);
-}
-
-Matrix3x3 Rocket::getInertiaTensor() const {
-
-	Matrix3x3 tensor;
-
-	double fuelRatio = 0.0;
-	if (initialFuelMass > 1e-9) {
-		fuelRatio = currentFuelMass / initialFuelMass;
-	}
-
-	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;
-	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
-	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
-
-	tensor.m[0][0] = currentIxx;
-	tensor.m[1][1] = currentIyy;
-	tensor.m[2][2] = currentIzz;
-
-	return tensor;
 }
 
 Matrix3x3 Rocket::getInverseInertiaTensor() const {

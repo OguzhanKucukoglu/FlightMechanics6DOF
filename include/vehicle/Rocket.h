@@ -1,6 +1,6 @@
 #pragma once
-#include "State.h"
-#include "Matrix3x3.h"
+#include "dynamics/State.h"
+#include "math/Matrix3x3.h"
 
 class Rocket {
 private:
@@ -29,8 +29,6 @@ private:
 	State currentState;
 
 	Derivative evaluate(const State& state, const Derivative& d, double dt) const;
-
-	Matrix3x3 getInertiaTensor() const;
 
 	Matrix3x3 getInverseInertiaTensor() const;
 

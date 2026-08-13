@@ -1,4 +1,4 @@
-#include "IMU.h"
+#include "sensors/IMU.h"
 
 IMU::IMU(double accel_noise, double gyro_noise, Vector3D accel_bias, Vector3D gyro_bias)
 	: accelerationNoiseStddev(accel_noise),

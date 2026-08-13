@@ -6,8 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(FlightEngine 
 	src/main.cpp
-	src/Vector3D.cpp
- "include/Vector3D.h" "include/Quaternion.h" "src/Quaternion.cpp" "include/State.h" "include/Rocket.h" "src/Rocket.cpp" "include/Matrix3x3.h" "include/IMU.h" "src/IMU.cpp")
+	src/math/Vector3D.cpp
+	src/math/Quaternion.cpp
+	src/sensors/IMU.cpp
+	src/vehicle/Rocket.cpp
+	src/environment/Atmosphere.cpp
+	include/dynamics/State.h
+	include/math/Matrix3x3.h
+	include/math/Quaternion.h
+	include/math/Vector3D.h
+	include/sensors/IMU.h
+	include/vehicle/Rocket.h
+	include/environment/Atmosphere.h
+)
 
-# header dosyalarýnýn nerede aranacaðý
 target_include_directories(FlightEngine PRIVATE include)

@@ -1,4 +1,4 @@
-#include "Quaternion.h"
+#include "math/Quaternion.h"
 #include <cmath>
 
 void Quaternion::normalize() {
@@ -39,4 +39,14 @@ Quaternion Quaternion::operator+(const Quaternion& q) const {
 Quaternion Quaternion::operator*(double scalar) const {
 
 	return Quaternion(w * scalar, x * scalar, y * scalar, z * scalar);
+}
+
+Quaternion Quaternion::getDerivative(const Vector3D& angularVelocity) {
+
+	return Quaternion(
+		0.5 * (-x * angularVelocity.x - y * angularVelocity.y - z * angularVelocity.z),
+		0.5 * (w * angularVelocity.x - y * angularVelocity.z - z * angularVelocity.y),
+		0.5 * (w * angularVelocity.y - x * angularVelocity.z + z * angularVelocity.x),
+		0.5 * (w * angularVelocity.z + x * angularVelocity.y - y * angularVelocity.x)
+	);
 }
