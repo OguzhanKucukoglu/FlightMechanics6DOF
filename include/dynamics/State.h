@@ -7,7 +7,7 @@ struct State {
 	Vector3D velocity; // Doðrusal Hýz (m/s)
 	Vector3D angularVelocity; // Açýsal Hýz (rad/s)
 	Quaternion orientation; // Yönelim (Kuaterniyon)
-	double fuelMass; // Yakýt kütlesi
+	double fuelMass = 0.0; // Yakýt kütlesi
 };
 
 struct Derivative {

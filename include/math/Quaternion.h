@@ -28,5 +28,8 @@ public:
 		return Vector3D(q_res.x, q_res.y, q_res.z);
 	}
 
+	double magnitude() const;
+	Quaternion normalized() const;
+
 	Quaternion getDerivative(const Vector3D& angularVelocity);
 };

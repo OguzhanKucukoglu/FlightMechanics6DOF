@@ -3,7 +3,7 @@
 
 void Quaternion::normalize() {
 
-	double mag = sqrt((w * w) + (x * x) + (y * y) + (z * z));
+	double mag = magnitude();
 
 	if (mag > 1e-9) {
 		w /= mag;
@@ -17,6 +17,16 @@ void Quaternion::normalize() {
 		y = 0.0;
 		z = 0.0;
 	}
+}
+
+double Quaternion::magnitude() const {
+	return sqrt((w * w) + (x * x) + (y * y) + (z * z));
+}
+
+Quaternion Quaternion::normalized() const {
+	Quaternion temp = *this;
+	temp.normalize();
+	return temp;
 }
 
 Quaternion Quaternion::operator*(const Quaternion& q)const {
@@ -45,7 +55,7 @@ Quaternion Quaternion::getDerivative(const Vector3D& angularVelocity) {
 
 	return Quaternion(
 		0.5 * (-x * angularVelocity.x - y * angularVelocity.y - z * angularVelocity.z),
-		0.5 * (w * angularVelocity.x - y * angularVelocity.z - z * angularVelocity.y),
+		0.5 * (w * angularVelocity.x + y * angularVelocity.z - z * angularVelocity.y),
 		0.5 * (w * angularVelocity.y - x * angularVelocity.z + z * angularVelocity.x),
 		0.5 * (w * angularVelocity.z + x * angularVelocity.y - y * angularVelocity.x)
 	);

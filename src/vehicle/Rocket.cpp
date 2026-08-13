@@ -166,20 +166,12 @@ Matrix3x3 Rocket::getInertiaTensor(double currentFuel) const {
 
 Matrix3x3 Rocket::getInverseInertiaTensor(double currentFuel) const {
 
+	Matrix3x3 I = getInertiaTensor(currentFuel);
 	Matrix3x3 inverseTensor;
 
-	double fuelRatio = 0.0;
-	if (initialFuelMass > 1e-9) {
-		fuelRatio = currentFuel / initialFuelMass;
-	}
-
-	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;
-	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
-	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
-
-	inverseTensor.m[0][0] = 1.0 / currentIxx;
-	inverseTensor.m[1][1] = 1.0 / currentIyy;
-	inverseTensor.m[2][2] = 1.0 / currentIzz;
+	inverseTensor.m[0][0] = 1.0 / I.m[0][0];
+	inverseTensor.m[1][1] = 1.0 / I.m[1][1];
+	inverseTensor.m[2][2] = 1.0 / I.m[2][2];
 
 	return inverseTensor;
 }

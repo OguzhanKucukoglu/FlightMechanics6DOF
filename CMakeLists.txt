@@ -22,4 +22,17 @@ add_executable(FlightEngine
 	include/environment/GravityModel.h
 )
 
+ add_executable(run_tests
+	tests/main_test.cpp
+	tests/test_gravity.cpp
+	tests/test_quaternion.cpp
+	tests/test_dynamics.cpp
+	src/environment/GravityModel.cpp
+	src/environment/Atmosphere.cpp
+	src/math/Vector3D.cpp
+	src/math/Quaternion.cpp
+	src/vehicle/Rocket.cpp
+)
+
 target_include_directories(FlightEngine PRIVATE include)
+target_include_directories(run_tests PRIVATE include)
