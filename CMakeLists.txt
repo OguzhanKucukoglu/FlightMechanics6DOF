@@ -11,6 +11,7 @@ add_executable(FlightEngine
 	src/sensors/IMU.cpp
 	src/vehicle/Rocket.cpp
 	src/environment/Atmosphere.cpp
+	src/environment/GravityModel.cpp
 	include/dynamics/State.h
 	include/math/Matrix3x3.h
 	include/math/Quaternion.h
@@ -18,6 +19,7 @@ add_executable(FlightEngine
 	include/sensors/IMU.h
 	include/vehicle/Rocket.h
 	include/environment/Atmosphere.h
+	include/environment/GravityModel.h
 )
 
 target_include_directories(FlightEngine PRIVATE include)

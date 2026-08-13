@@ -20,7 +20,7 @@ In 6-DOF aerospace simulations, undefined conventions lead to catastrophic algor
 *   `+Z` = Belly (Down)
 
 ### 3. Attitude Kinematics
-*   **Representation:** Quaternions $(q)$
-*   **Convention:** Hamilton Convention $(w, x, y, z)$
+*   **Representation:** Quaternions (q)
+*   **Convention:** Hamilton Convention (w, x, y, z)
 *   **Rotation:** Right-handed coordinate system.
-*   **Kinematic Derivative:** $\dot{q} = \frac{1}{2} q \otimes \omega$ (where $\omega$ is the body-frame angular velocity).
+*   **Kinematic Derivative:** q_dot = 0.5 * q ? ? (where ? is the body-frame angular velocity).

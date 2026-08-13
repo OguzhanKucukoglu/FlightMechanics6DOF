@@ -6,12 +6,6 @@ using namespace std;
 
 int main() {
 
-	State initialState;
-	initialState.position = Vector3D(0.0, 0.0, 0.0);
-	initialState.velocity = Vector3D(0.0, 0.0, 0.0);
-	initialState.angularVelocity = Vector3D(0.0, 0.0, 0.0);
-	initialState.orientation = Quaternion(1.0, 0.0, 0.0, 0.0);
-
 	double dryMass = 150.0;
 	double fuelMass = 50.0;
 	double refArea = 0.05;
@@ -26,6 +20,13 @@ int main() {
 	double emptyCG_X = -1.0;
 	double fullCG_X = -1.2;
 	double engine_X = -3.0;
+
+	State initialState;
+	initialState.position = Vector3D(0.0, 0.0, 0.0);
+	initialState.velocity = Vector3D(0.0, 0.0, 0.0);
+	initialState.angularVelocity = Vector3D(0.0, 0.0, 0.0);
+	initialState.orientation = Quaternion(1.0, 0.0, 0.0, 0.0);
+	initialState.fuelMass = fuelMass;
 
 	Rocket myRocket(dryMass, fuelMass, refArea, refLength,
 		thrustMag, massFlowRate, dragCoeff,

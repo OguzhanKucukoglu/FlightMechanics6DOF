@@ -1,5 +1,6 @@
 #include "vehicle/Rocket.h"
 #include "environment/Atmosphere.h"
+#include "environment/GravityModel.h"
 #include <algorithm>
 #include <cmath>
 
@@ -21,21 +22,15 @@ Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double m
 	engine_X(engineX),
 	gimbal_Y(0.0),
 	gimbal_Z(0.0),
-	currentFuelMass(fuel_m),
 	initialFuelMass(fuel_m),
 	currentState(initial_state)
 { }
 
-double Rocket::getTotalMass() const {
-
-	return dryMass + currentFuelMass;
-}
-
-double Rocket::getCurrentCG() const {
+double Rocket::getCurrentCG(double currentFuel) const {
 
 	double fuelRatio = 0.0;
 	if (initialFuelMass > 1e-9) {
-		fuelRatio = currentFuelMass / initialFuelMass;
+		fuelRatio = currentFuel / initialFuelMass;
 	}
 
 	double currentCG_X = emptyCG_X + (fullCG_X - emptyCG_X) * fuelRatio;
@@ -49,17 +44,20 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 	Derivative output;
 
-	double mass = getTotalMass();
+	double currentFuel = state.fuelMass;
+	double mass = dryMass + currentFuel;
 
 	output.velocity = state.velocity;
 
 	output.spin = state.orientation.getDerivative(state.angularVelocity);
 	
-	Vector3D gravity(0.0, -9.81, 0.0);
+	Vector3D gravity = GravityModel::getGravity(state.position.y);
 	Vector3D netForce = gravity * mass;
 	Vector3D netTorque(0.0, 0.0, 0.0);
 
-	if (currentFuelMass > 0.0) {
+	if (currentFuel > 0.0) {
+
+		output.fuelMassDot = -massFlowRate;
 		
 		double tvc_x = thrustMagnitude * std::cos(gimbal_Y) * std::cos(gimbal_Z);
 		double tvc_y = thrustMagnitude * std::sin(gimbal_Y);
@@ -70,12 +68,15 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 		Vector3D worldThrust = state.orientation.rotate(localThrust);
 		netForce = netForce + worldThrust;
 
-		double currentCG_X = getCurrentCG();
+		double currentCG_X = getCurrentCG(currentFuel);
 		Vector3D engineMomentArm(engine_X - currentCG_X, 0.0, 0.0);
 
 		Vector3D tvcTorque = engineMomentArm.crossProduct(localThrust);
 
 		netTorque = netTorque + tvcTorque;
+	}
+	else {
+		output.fuelMassDot = 0.0;
 	}
 
 	double v_mag = state.velocity.magnitude();
@@ -84,6 +85,13 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 		// TODO: NED çerçevesine geçildiðinde irtifa '-state.position.z' olacak.
 		AtmosphericData env = Atmosphere::getConditions(state.position.y);
 		double rho = env.density;
+
+		// TODO (AeroDB Entegrasyonu): CD sabit olamaz. 
+		// Ýleride Mach sayýsý (M) ve Hücum Açýsýna (Alpha) baðlý olarak AeroDB'den çekilecek:
+		// double Mach = v_mag / env.speedOfSound;
+		// double alpha = calculateAngleOfAttack(state);
+		// double currentCD = AeroDB::getCD(Mach, alpha);
+
 		double dragMag = 0.5 * rho * v_mag * v_mag * dragCoefficient * referenceArea;
 
 		Vector3D dragVector = state.velocity.normalized() * (-dragMag);
@@ -92,8 +100,10 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 		Vector3D localDrag = state.orientation.conjugate().rotate(dragVector);
 
-		double currentCG_X = getCurrentCG();
+		double currentCG_X = getCurrentCG(currentFuel);
 
+		// TODO (AeroDB Entegrasyonu): Basýnç Merkezi (CP) sabit (-2.5) olamaz.
+		// Mach ve Alpha deðiþtikçe CP kayar. Ýleride AeroDB::getCP(Mach, alpha) ile baðlanacak.
 		double currentCP_X = -2.5;
 
 		Vector3D cpVector(currentCP_X - currentCG_X, 0.0, 0.0);
@@ -105,15 +115,22 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 	output.acceleration = netForce * (1.0 / mass);
 
-	Matrix3x3 inverseTensor = getInverseInertiaTensor();
-	output.angularAcceleration = inverseTensor * netTorque;
+	Matrix3x3 I = getInertiaTensor(currentFuel);
+	Matrix3x3 I_inv = getInverseInertiaTensor(currentFuel);
+
+	Vector3D angularMomentum = I * state.angularVelocity;
+	Vector3D gyroscopicTorque = state.angularVelocity.crossProduct(angularMomentum);
+	Vector3D effectiveTorque = netTorque - gyroscopicTorque;
+
+	output.angularAcceleration = I_inv * effectiveTorque;
 
 	return output;
+
 }
 
 void Rocket::integrate(double dt) {
 
-	Derivative zeroDerivative = { Vector3D(0,0,0), Vector3D(0,0,0), Vector3D(0,0,0), Quaternion(0,0,0,0) };
+	Derivative zeroDerivative = { Vector3D(0,0,0), Vector3D(0,0,0), Vector3D(0,0,0), Quaternion(0,0,0,0), 0.0 };
 
 	Derivative k1 = evaluate(currentState, zeroDerivative, 0.0);
 	Derivative k2 = evaluate(currentState, k1, dt * 0.5);
@@ -125,17 +142,35 @@ void Rocket::integrate(double dt) {
 	currentAcceleration = netDerivative.acceleration;
 
 	currentState = stepState(currentState, netDerivative, dt);
-
-	currentFuelMass = std::max(0.0, currentFuelMass - massFlowRate * dt);
 }
 
-Matrix3x3 Rocket::getInverseInertiaTensor() const {
+Matrix3x3 Rocket::getInertiaTensor(double currentFuel) const {
+
+	Matrix3x3 tensor;
+
+	double fuelRatio = 0.0;
+	if (initialFuelMass > 1e-9) {
+		fuelRatio = currentFuel / initialFuelMass;
+	}
+
+	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;
+	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
+	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
+
+	tensor.m[0][0] = currentIxx;
+	tensor.m[1][1] = currentIyy;
+	tensor.m[2][2] = currentIzz;
+
+	return tensor;
+}
+
+Matrix3x3 Rocket::getInverseInertiaTensor(double currentFuel) const {
 
 	Matrix3x3 inverseTensor;
 
 	double fuelRatio = 0.0;
 	if (initialFuelMass > 1e-9) {
-		fuelRatio = currentFuelMass / initialFuelMass;
+		fuelRatio = currentFuel / initialFuelMass;
 	}
 
 	double currentIxx = emptyIxx + (fullIxx - emptyIxx) * fuelRatio;

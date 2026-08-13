@@ -21,7 +21,6 @@ private:
 	double gimbal_Y;
 	double gimbal_Z;
 	
-	double currentFuelMass;
 	const double initialFuelMass;
 
 	Vector3D currentAcceleration;
@@ -30,15 +29,15 @@ private:
 
 	Derivative evaluate(const State& state, const Derivative& d, double dt) const;
 
-	Matrix3x3 getInverseInertiaTensor() const;
+	Matrix3x3 getInertiaTensor(double currentFuel) const;
+
+	Matrix3x3 getInverseInertiaTensor(double currentFuel) const;
 
 public:
 
 	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state);
 
-	double getTotalMass() const;
-
-	double getCurrentCG() const;
+	double getCurrentCG(double currentFuel) const;
 
 	State getState() const { return currentState; }
 	void setState(const State& newState) { currentState = newState; }
