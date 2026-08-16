@@ -31,5 +31,5 @@ public:
 	double magnitude() const;
 	Quaternion normalized() const;
 
-	Quaternion getDerivative(const Vector3D& angularVelocity);
+	Quaternion getDerivative(const Vector3D& angularVelocity) const;
 };

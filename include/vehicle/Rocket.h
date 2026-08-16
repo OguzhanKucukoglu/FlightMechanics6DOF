@@ -48,4 +48,9 @@ public:
 	void integrate(double dt);
 
 	Vector3D getCurrentAcceleration() const { return currentAcceleration; }
+
+	void setGimbal(double pitch, double yaw) {
+		gimbal_Y = pitch;
+		gimbal_Z = yaw;
+	}
 };

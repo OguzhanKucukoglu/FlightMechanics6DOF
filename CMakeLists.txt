@@ -29,6 +29,7 @@ add_executable(FlightEngine
 	tests/test_gravity.cpp
 	tests/test_quaternion.cpp
 	tests/test_dynamics.cpp
+	tests/test_tvc.cpp
 	src/environment/GravityModel.cpp
 	src/environment/Atmosphere.cpp
 	src/math/Vector3D.cpp

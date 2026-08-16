@@ -14,7 +14,7 @@ struct Derivative {
 	Vector3D velocity; // Konumun türevi hýzdýr
 	Vector3D acceleration; // Hýzýn türevi ivmedir
 	Vector3D angularAcceleration; // Açýsal hýzýn türevi
-	Quaternion spin; // Yönelimin türevi (Kuaterniyon Kinematiði)
+	Quaternion orientationDerivative; // Yönelimin türevi (Kuaterniyon Kinematiði)
 	double fuelMassDot; // Yakýtýn azalma hýzý (türevi)
 
 	Derivative operator+(const Derivative& d) const {
@@ -23,7 +23,7 @@ struct Derivative {
 			velocity + d.velocity,
 			acceleration + d.acceleration,
 			angularAcceleration + d.angularAcceleration,
-			spin + d.spin,
+			orientationDerivative + d.orientationDerivative,
 			fuelMassDot + d.fuelMassDot
 		};
 	}
@@ -34,7 +34,7 @@ struct Derivative {
 			velocity * scalar,
 			acceleration * scalar,
 			angularAcceleration * scalar,
-			spin * scalar,
+			orientationDerivative* scalar,
 			fuelMassDot * scalar
 		};
 	}
@@ -49,7 +49,7 @@ inline State stepState(const State& current, const Derivative& deriv, double dt)
 
 	nextState.angularVelocity = current.angularVelocity + (deriv.angularAcceleration * dt);
 
-	nextState.orientation = current.orientation + (deriv.spin * dt);
+	nextState.orientation = current.orientation + (deriv.orientationDerivative * dt);
 
 	nextState.fuelMass = current.fuelMass + (deriv.fuelMassDot * dt);
 

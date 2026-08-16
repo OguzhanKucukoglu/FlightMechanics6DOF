@@ -51,7 +51,7 @@ Quaternion Quaternion::operator*(double scalar) const {
 	return Quaternion(w * scalar, x * scalar, y * scalar, z * scalar);
 }
 
-Quaternion Quaternion::getDerivative(const Vector3D& angularVelocity) {
+Quaternion Quaternion::getDerivative(const Vector3D& angularVelocity) const {
 
 	return Quaternion(
 		0.5 * (-x * angularVelocity.x - y * angularVelocity.y - z * angularVelocity.z),
