@@ -27,7 +27,7 @@ The project is intentionally being built as a modular engine rather than as a vi
 - 6-DOF rigid-body flight dynamics
 - Quaternion-based attitude representation
 - Hamilton quaternion convention `(w, x, y, z)`
-- Right-handed coordinate system
+- Aerospace-standard NED (North-East-Down) world frame
 - Fourth-order Runge-Kutta (RK4) integration
 - Variable propellant mass
 - Fuel-dependent center-of-gravity migration
@@ -113,27 +113,15 @@ Quaternion normalization is maintained during integration to avoid numerical dri
 
 Coordinate-frame consistency is critical in a 6-DOF simulation.
 
-### Current World Frame
+### World Frame
 
-The current implementation uses a **Y-Up** world convention.
+The implementation uses the aerospace standard **NED (North-East-Down)** navigation frame:
 
-### Planned World Frame
+- `+X` = North
+- `+Y` = East
+- `+Z` = Down
 
-The long-term target is a **NED (North-East-Down)** navigation frame:
-
-```text
-+X = North
-+Y = East
-+Z = Down
-```
-
-Under the planned NED convention:
-
-```text
-Altitude = -Z
-```
-
-The transition to NED is part of the project roadmap.
+Under the NED convention, altitude is mathematically represented as `-Z`.
 
 ### Vehicle Body Frame
 
@@ -173,6 +161,7 @@ FlightMechanics6DOF/
 │   │   └── GravityModel.h
 │   │
 │   ├── math/
+│   │   ├── LookupTable1D.h
 │   │   ├── Matrix3x3.h
 │   │   ├── Quaternion.h
 │   │   └── Vector3D.h
@@ -189,6 +178,7 @@ FlightMechanics6DOF/
 │   │   └── GravityModel.cpp
 │   │
 │   ├── math/
+│   │   ├── LookupTable1D.cpp
 │   │   ├── Quaternion.cpp
 │   │   └── Vector3D.cpp
 │   │
@@ -330,6 +320,16 @@ measurement = true value + bias + noise
 
 The sensor layer is intentionally separated from the vehicle dynamics so that future navigation and state-estimation algorithms can consume simulated measurements without depending directly on the true simulation state.
 
+## Simulation Results
+
+*Note: Visualizations of the simulation outputs are currently being generated and will be added here.*
+
+Planned plots include:
+- Free Fall: Numerical (RK4) vs. Analytical
+- TVC Trajectory Comparison (0°, 2°, 5° gimbal angles)
+- Altitude, Velocity, and Mass vs. Time
+- Pitch, Yaw, and Angular Rate vs. Time
+
 ## Design Goals
 
 The project is being developed around several principles:
@@ -368,27 +368,27 @@ The roadmap is intentionally incremental.
 
 ### Physics Improvements
 
-- [ ] Complete NED world-frame migration
+- [x] Complete NED world-frame migration
 - [ ] Wind / relative-air-velocity model
 - [ ] Speed-of-sound and Mach-number model
 - [ ] Mach-dependent aerodynamic coefficients
 - [ ] Angle-of-attack / sideslip modeling
 - [ ] Aerodynamic force and moment model
-- [ ] More realistic propulsion / thrust curves
+- [x] More realistic propulsion / thrust curves
 
 ### Verification and Validation
 
-- [ ] Unit tests for mathematical primitives
-- [ ] Quaternion validation tests
-- [ ] Free-fall analytical comparison
-- [ ] Rigid-body rotational-dynamics validation
+- [x] Unit tests for mathematical primitives
+- [x] Quaternion validation tests
+- [x] Free-fall analytical comparison
+- [x] Rigid-body rotational-dynamics validation
 - [ ] RK4 convergence tests
-- [ ] Energy / momentum consistency checks where applicable
+- [x] Energy / momentum consistency checks where applicable
 - [ ] Automated regression tests
 
 ### Sensors and Navigation
 
-- [ ] More realistic IMU specific-force model
+- [x] More realistic IMU specific-force model
 - [ ] Time-varying sensor bias / random walk
 - [ ] GPS simulation
 - [ ] Barometric altimeter simulation
@@ -439,4 +439,4 @@ The project prioritizes transparent equations, modular software architecture, an
 
 ## License
 
-No license has been specified yet.
+This project is licensed under the MIT License.
