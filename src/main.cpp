@@ -10,8 +10,7 @@ int main() {
 	double fuelMass = 50.0;
 	double refArea = 0.05;
 	double refLength = 3.0;
-	double thrustMag = 5000.0;
-	double massFlowRate = 2.0;
+	double specificImpulse = 250.0;
 	double dragCoeff = 0.4;
 
 	double emptyIxx = 10.0, emptyIyy = 50.0, emptyIzz = 50.0;
@@ -29,11 +28,20 @@ int main() {
 	initialState.fuelMass = fuelMass;
 
 	Rocket myRocket(dryMass, fuelMass, refArea, refLength,
-		thrustMag, massFlowRate, dragCoeff,
+		specificImpulse, dragCoeff,
 		emptyIxx, emptyIyy, emptyIzz,
 		fullIxx, fullIyy, fullIzz,
 		emptyCG_X, fullCG_X, engine_X, initialState
 	);
+
+	LookupTable1D myMotorCurve;
+	myMotorCurve.addPoint(0.0, 0.0);
+	myMotorCurve.addPoint(0.1, 70000.0);
+	myMotorCurve.addPoint(2.0, 50000.0);
+	myMotorCurve.addPoint(5.0, 50000.0);
+	myMotorCurve.addPoint(5.5, 0.0);
+
+	myRocket.setThrustCurve(myMotorCurve);
 
 	double accelNoise = 0.05;
 	double gyroNoise = 0.002;

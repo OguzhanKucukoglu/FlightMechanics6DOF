@@ -5,12 +5,11 @@
 #include <cmath>
 #include <stdexcept>
 
-Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state)
+Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double isp, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state)
 	: dryMass(dry_m),
 	referenceArea(s_ref),
 	referenceLength(l_ref),
-	thrustMagnitude(magnitude),
-	massFlowRate(flow_rate),
+	specificImpulse(isp),
 	dragCoefficient(drag_coeff),
 	emptyIxx(empty_ixx),
 	emptyIyy(empty_iyy),
@@ -65,23 +64,31 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 	if (currentFuel > 0.0) {
 
-		output.fuelMassDot = -massFlowRate;
-		
-		Vector3D thrustBody(
-			thrustMagnitude * std::cos(gimbal_Y) * std::cos(gimbal_Z),
-			thrustMagnitude* std::cos(gimbal_Y)* std::sin(gimbal_Z),
-			-thrustMagnitude * std::sin(gimbal_Y)
-		);
+		double currentThrust = thrustCurve.getValue(state.time);
 
-		Vector3D worldThrust = state.orientation.rotate(thrustBody);
-		netForce = netForce + worldThrust;
+		if (currentThrust <= 0.0) {
+			output.fuelMassDot = 0.0;
+		}
+		else {
+			const double g0 = 9.81;
+			output.fuelMassDot = -(currentThrust / (specificImpulse * g0)); // m_dot = Thrust / (Isp * g0)
 
-		double currentCG_X = getCurrentCG(currentFuel);
-		Vector3D engineMomentArm(engine_X - currentCG_X, 0.0, 0.0);
+			Vector3D thrustBody(
+				currentThrust * std::cos(gimbal_Y) * std::cos(gimbal_Z),
+				currentThrust * std::cos(gimbal_Y) * std::sin(gimbal_Z),
+				-currentThrust * std::sin(gimbal_Y)
+			);
 
-		Vector3D tvcTorque = engineMomentArm.crossProduct(thrustBody);
+			Vector3D worldThrust = state.orientation.rotate(thrustBody);
+			netForce = netForce + worldThrust;
 
-		netTorque = netTorque + tvcTorque;
+			double currentCG_X = getCurrentCG(currentFuel);
+			Vector3D engineMomentArm(engine_X - currentCG_X, 0.0, 0.0);
+
+			Vector3D tvcTorque = engineMomentArm.crossProduct(thrustBody);
+
+			netTorque = netTorque + tvcTorque;
+		}		
 	}
 	else {
 		output.fuelMassDot = 0.0;

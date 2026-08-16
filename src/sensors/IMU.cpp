@@ -1,4 +1,5 @@
 #include "sensors/IMU.h"
+#include "environment/GravityModel.h"
 
 IMU::IMU(double accel_noise, double gyro_noise, Vector3D accel_bias, Vector3D gyro_bias)
 	: accelerationNoiseStddev(accel_noise),
@@ -15,13 +16,20 @@ IMU_Measurement IMU::readSensor(const State& trueState, const Vector3D& trueAcce
 
 	IMU_Measurement measurement;
 
-	measurement.measuredAcceleration.x = trueAcceleration.x + accelerationBias.x + accelerationDist(generator);
-	measurement.measuredAcceleration.y = trueAcceleration.y + accelerationBias.y + accelerationDist(generator);
-	measurement.measuredAcceleration.z = trueAcceleration.z + accelerationBias.z + accelerationDist(generator);
+	double altitude = -trueState.position.z;
+	Vector3D gWorld = GravityModel::getGravity(altitude);
+	Vector3D specificForceNED = trueAcceleration - gWorld;
 
-	measurement.measuredAngularVelocity.x = trueState.angularVelocity.x + gyroBias.x + gyroDist(generator);
-	measurement.measuredAngularVelocity.y = trueState.angularVelocity.y + gyroBias.y + gyroDist(generator);
-	measurement.measuredAngularVelocity.z = trueState.angularVelocity.z + gyroBias.z + gyroDist(generator);
+	Vector3D specificForceBody = trueState.orientation.conjugate().rotate(specificForceNED);
+	Vector3D angularVelBody = trueState.angularVelocity;
+
+	measurement.measuredAcceleration.x = specificForceBody.x + accelerationBias.x + accelerationDist(generator);
+	measurement.measuredAcceleration.y = specificForceBody.y + accelerationBias.y + accelerationDist(generator);
+	measurement.measuredAcceleration.z = specificForceBody.z + accelerationBias.z + accelerationDist(generator);
+
+	measurement.measuredAngularVelocity.x = angularVelBody.x + gyroBias.x + gyroDist(generator);
+	measurement.measuredAngularVelocity.y = angularVelBody.y + gyroBias.y + gyroDist(generator);
+	measurement.measuredAngularVelocity.z = angularVelBody.z + gyroBias.z + gyroDist(generator);
 
 	return measurement;
 }

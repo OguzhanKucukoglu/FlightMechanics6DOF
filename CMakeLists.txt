@@ -34,6 +34,7 @@ add_executable(FlightEngine
 	src/environment/Atmosphere.cpp
 	src/math/Vector3D.cpp
 	src/math/Quaternion.cpp
+	src/math/LookupTable1D.cpp
 	src/vehicle/Rocket.cpp
 )
 

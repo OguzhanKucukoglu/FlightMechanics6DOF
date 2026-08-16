@@ -8,6 +8,7 @@ struct State {
 	Vector3D angularVelocity; // Açýsal Hýz (rad/s)
 	Quaternion orientation; // Yönelim (Kuaterniyon)
 	double fuelMass = 0.0; // Yakýt kütlesi
+	double time = 0.0; // Roketin uçuþ süresi
 };
 
 struct Derivative {
@@ -16,6 +17,7 @@ struct Derivative {
 	Vector3D angularAcceleration; // Açýsal hýzýn türevi
 	Quaternion orientationDerivative; // Yönelimin türevi (Kuaterniyon Kinematiði)
 	double fuelMassDot; // Yakýtýn azalma hýzý (türevi)
+	double timeDot = 1.0; // Zamanýn türevi saniyede 1 saniyedir
 
 	Derivative operator+(const Derivative& d) const {
 
@@ -52,6 +54,8 @@ inline State stepState(const State& current, const Derivative& deriv, double dt)
 	nextState.orientation = current.orientation + (deriv.orientationDerivative * dt);
 
 	nextState.fuelMass = current.fuelMass + (deriv.fuelMassDot * dt);
+
+	nextState.time = current.time + (deriv.timeDot * dt);
 
 	nextState.orientation.normalize();
 

@@ -13,9 +13,15 @@ void runTvcTest() {
     state.orientation = Quaternion(1.0, 0.0, 0.0, 0.0);
     state.fuelMass = 50.0;
 
-    Rocket rocket(50.0, 50.0, 0.05, 3.0, 50000.0, 0.0, 0.0,
+    LookupTable1D constantThrust;
+    constantThrust.addPoint(0.0, 50000.0);
+    constantThrust.addPoint(100.0, 50000.0);
+
+    Rocket rocket(50.0, 50.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.5, -1.5, -3.0, state);
+
+    rocket.setThrustCurve(constantThrust);
 
     // 1. PITCH TEST (+5 Degrees)
     // The motor nozzle rotates 5 degrees on the Y-axis (pitch).
@@ -35,9 +41,11 @@ void runTvcTest() {
 
     // 2. YAW TEST (+5 Degrees)
     // The motor nozzle rotates 5 degrees in the Z-axis (Yaw).
-    Rocket yawRocket(50.0, 50.0, 0.05, 3.0, 50000.0, 0.0, 0.0,
+    Rocket yawRocket(50.0, 50.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.5, -1.5, -3.0, state);
+
+    yawRocket.setThrustCurve(constantThrust);
 
     double yaw_angle = 5.0 * 3.14159265359 / 180.0;
     yawRocket.setGimbal(0.0, yaw_angle);
@@ -54,9 +62,11 @@ void runTvcTest() {
 
     // 3. TVC MAGNITUDE CONSERVATION TEST 
     // Is the total thrust of the motor preserved even when the gimbal is forced to the extreme angles in Y and Z directions?
-    Rocket magRocket(50.0, 50.0, 0.05, 3.0, 50000.0, 0.0, 0.0,
+    Rocket magRocket(50.0, 50.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.5, -1.5, -3.0, state);
+
+    magRocket.setThrustCurve(constantThrust);
 
     // We apply a 45-degree deviation in both the Pitch and Yaw axes (Endpoint)
     double extreme_angle = 45.0 * 3.14159265359 / 180.0;
@@ -78,13 +88,15 @@ void runTvcTest() {
     double half_yaw90 = (90.0 * 3.14159265359 / 180.0) / 2.0;
     yaw90State.orientation = Quaternion(std::cos(half_yaw90), 0.0, 0.0, std::sin(half_yaw90));
 
-    Rocket rotRocket(50.0, 50.0, 0.05, 3.0, 50000.0, 0.0, 0.0,
+    Rocket rotRocket(50.0, 50.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.5, -1.5, -3.0, yaw90State);
 
+    rotRocket.setThrustCurve(constantThrust);
+
     // At Gimbal 0 (Motor is pushing straight behind the rocket in the +X direction)
     rotRocket.setGimbal(0.0, 0.0);
-    rotRocket.integrate(0.01);
+    rotRocket.integrate(0.0);
 
     Vector3D forceNED = (rotRocket.getCurrentAcceleration() * 100.0) - gravityForce;
 

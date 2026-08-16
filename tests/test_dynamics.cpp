@@ -15,7 +15,7 @@ void runDynamicsTests() {
     state.fuelMass = 0.0;
 
     // Disable atmosphere and propulsion by setting CD = 0.0 and Thrust = 0.0
-    Rocket rocket(100.0, 0.0, 0.05, 3.0, 0.0, 0.0, 0.0,
+    Rocket rocket(100.0, 0.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.0, -1.0, -3.0, state);
 
@@ -47,7 +47,7 @@ void runDynamicsTests() {
     spinState.orientation = Quaternion(1.0, 0.0, 0.0, 0.0);
     spinState.fuelMass = 0.0;
 
-    Rocket spinRocket(100.0, 0.0, 0.05, 3.0, 0.0, 0.0, 0.0,
+    Rocket spinRocket(100.0, 0.0, 0.05, 3.0, 250.0, 0.0,
         10.0, 50.0, 50.0, 10.0, 50.0, 50.0,
         -1.0, -1.0, -3.0, spinState);
 

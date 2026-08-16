@@ -1,14 +1,15 @@
 #pragma once
 #include "dynamics/State.h"
 #include "math/Matrix3x3.h"
+#include "math/LookupTable1D.h"
 
 class Rocket {
 private:
 	const double dryMass;
 	const double referenceArea; // S_ref (m^2)
 	const double referenceLength; // L_ref (m)
-	const double thrustMagnitude; // Motor itki kuvveti (Newton)
-	const double massFlowRate; // Saniyede tüketilen yakýt (kg/s)
+	LookupTable1D thrustCurve; // Zaman vs Ýtki tablosu
+	const double specificImpulse; // Motorun verimi
 	const double dragCoefficient;
 
 	const double emptyIxx, emptyIyy, emptyIzz;
@@ -38,7 +39,11 @@ private:
 
 public:
 
-	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double magnitude, double flow_rate, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state);
+	Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double isp, double drag_coeff, double empty_ixx, double empty_iyy, double empty_izz, double full_ixx, double full_iyy, double full_izz, double empty_cg_x, double full_cg_x, double engineX, const State& initial_state);
+
+	void setThrustCurve(const LookupTable1D& curve) {
+		thrustCurve = curve;
+	}
 
 	double getCurrentCG(double currentFuel) const;
 
