@@ -12,7 +12,10 @@ private:
 	const double dragCoefficient;
 
 	const double emptyIxx, emptyIyy, emptyIzz;
+	double emptyIxy = 0.0, emptyIxz = 0.0, emptyIyz = 0.0;
+
 	const double fullIxx, fullIyy, fullIzz;
+	double fullIxy = 0.0, fullIxz = 0.0, fullIyz = 0.0;
 
 	const double emptyCG_X;
 	const double fullCG_X;

@@ -8,7 +8,7 @@ void runDynamicsTests() {
     // TEST 1: FREE-FALL
     // Engine off, drag coefficient zero. Pure Newton kinematics under gravity.
     State state;
-    state.position = Vector3D(0.0, 10000.0, 0.0);
+    state.position = Vector3D(0.0, 0.0, -10000.0);
     state.velocity = Vector3D(0.0, 0.0, 0.0);
     state.angularVelocity = Vector3D(0.0, 0.0, 0.0);
     state.orientation = Quaternion(1.0, 0.0, 0.0, 0.0);
@@ -31,11 +31,11 @@ void runDynamicsTests() {
 
     // Analytically calculate local gravity at 10 km using the Inverse-Square law
     double g_local = 9.81 * (6371000.0 / 6381000.0) * (6371000.0 / 6381000.0);
-    double expected_vy = -g_local * total_time;
-    double expected_y = 10000.0 - 0.5 * g_local * total_time * total_time;
+    double expected_vy = g_local * total_time;
+    double expected_y = -10000.0 + 0.5 * g_local * total_time * total_time;
 
-    EXPECT_NEAR(finalState.velocity.y, expected_vy, 1e-2, "Free-fall Velocity (RK4 matches analytical)");
-    EXPECT_NEAR(finalState.position.y, expected_y, 1e-2, "Free-fall Position (RK4 matches analytical)");
+    EXPECT_NEAR(finalState.velocity.z, expected_vy, 1e-2, "Free-fall Velocity (RK4 matches analytical)");
+    EXPECT_NEAR(finalState.position.z, expected_y, 1e-2, "Free-fall Position (RK4 matches analytical)");
 
     // TEST 2: GYROSCOPIC COUPLING
     // No external torque applied. Proof that a spinning asymmetric body 

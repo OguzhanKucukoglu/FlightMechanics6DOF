@@ -14,9 +14,15 @@ Rocket::Rocket(double dry_m, double fuel_m, double s_ref, double l_ref, double m
 	emptyIxx(empty_ixx),
 	emptyIyy(empty_iyy),
 	emptyIzz(empty_izz),
+	emptyIxy(0.0),
+	emptyIxz(0.0),
+	emptyIyz(0.0),
 	fullIxx(full_ixx),
 	fullIyy(full_iyy),
 	fullIzz(full_izz),
+	fullIxy(0.0),
+	fullIxz(0.0),
+	fullIyz(0.0),
 	emptyCG_X(empty_cg_x),
 	fullCG_X(full_cg_x),
 	engine_X(engineX),
@@ -51,7 +57,8 @@ Derivative Rocket::evaluate(const State& initial, const Derivative& d, double dt
 
 	output.spin = state.orientation.getDerivative(state.angularVelocity);
 	
-	Vector3D gravity = GravityModel::getGravity(state.position.y);
+	double altitude = -state.position.z;
+	Vector3D gravity = GravityModel::getGravity(altitude);
 	Vector3D netForce = gravity * mass;
 	Vector3D netTorque(0.0, 0.0, 0.0);
 
@@ -157,9 +164,17 @@ Matrix3x3 Rocket::getInertiaTensor(double currentFuel) const {
 	double currentIyy = emptyIyy + (fullIyy - emptyIyy) * fuelRatio;
 	double currentIzz = emptyIzz + (fullIzz - emptyIzz) * fuelRatio;
 
+	double currentIxy = emptyIxy + (fullIxy - emptyIxy) * fuelRatio;
+	double currentIxz = emptyIxz + (fullIxz - emptyIxz) * fuelRatio;
+	double currentIyz = emptyIyz + (fullIyz - emptyIyz) * fuelRatio;
+
 	tensor.m[0][0] = currentIxx;
 	tensor.m[1][1] = currentIyy;
 	tensor.m[2][2] = currentIzz;
+
+	tensor.m[0][0] = currentIxx;   tensor.m[0][1] = -currentIxy;  tensor.m[0][2] = -currentIxz;
+	tensor.m[1][0] = -currentIxy;  tensor.m[1][1] = currentIyy;   tensor.m[1][2] = -currentIyz;
+	tensor.m[2][0] = -currentIxz;  tensor.m[2][1] = -currentIyz;  tensor.m[2][2] = currentIzz;
 
 	return tensor;
 }
@@ -169,9 +184,39 @@ Matrix3x3 Rocket::getInverseInertiaTensor(double currentFuel) const {
 	Matrix3x3 I = getInertiaTensor(currentFuel);
 	Matrix3x3 inverseTensor;
 
-	inverseTensor.m[0][0] = 1.0 / I.m[0][0];
-	inverseTensor.m[1][1] = 1.0 / I.m[1][1];
-	inverseTensor.m[2][2] = 1.0 / I.m[2][2];
+	// 3x3 Matrix Elements
+	double m00 = I.m[0][0], m01 = I.m[0][1], m02 = I.m[0][2];
+	double m10 = I.m[1][0], m11 = I.m[1][1], m12 = I.m[1][2];
+	double m20 = I.m[2][0], m21 = I.m[2][1], m22 = I.m[2][2];
+
+	// Calculate the cofactors
+	double c00 = m11 * m22 - m12 * m21;
+	double c01 = m12 * m20 - m10 * m22;
+	double c02 = m10 * m21 - m11 * m20;
+
+	// Determinant
+	double det = m00 * c00 + m01 * c01 + m02 * c02;
+
+
+	if (std::abs(det) < 1e-9) {
+		inverseTensor.m[0][0] = 1.0; inverseTensor.m[1][1] = 1.0; inverseTensor.m[2][2] = 1.0;
+		return inverseTensor;
+	}
+
+	double invDet = 1.0 / det;
+
+	// Multiply the adjugate matrix by the inverse of the determinant to create the inverse matrix
+	inverseTensor.m[0][0] = c00 * invDet;
+	inverseTensor.m[0][1] = (m02 * m21 - m01 * m22) * invDet;
+	inverseTensor.m[0][2] = (m01 * m12 - m02 * m11) * invDet;
+
+	inverseTensor.m[1][0] = c01 * invDet;
+	inverseTensor.m[1][1] = (m00 * m22 - m02 * m20) * invDet;
+	inverseTensor.m[1][2] = (m02 * m10 - m00 * m12) * invDet;
+
+	inverseTensor.m[2][0] = c02 * invDet;
+	inverseTensor.m[2][1] = (m01 * m20 - m00 * m21) * invDet;
+	inverseTensor.m[2][2] = (m00 * m11 - m01 * m10) * invDet;
 
 	return inverseTensor;
 }

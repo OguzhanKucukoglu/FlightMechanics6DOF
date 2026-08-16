@@ -8,6 +8,7 @@ add_executable(FlightEngine
 	src/main.cpp
 	src/math/Vector3D.cpp
 	src/math/Quaternion.cpp
+	src/math/LookupTable1D.cpp
 	src/sensors/IMU.cpp
 	src/vehicle/Rocket.cpp
 	src/environment/Atmosphere.cpp
@@ -16,6 +17,7 @@ add_executable(FlightEngine
 	include/math/Matrix3x3.h
 	include/math/Quaternion.h
 	include/math/Vector3D.h
+	include/math/LookupTable1D.h
 	include/sensors/IMU.h
 	include/vehicle/Rocket.h
 	include/environment/Atmosphere.h

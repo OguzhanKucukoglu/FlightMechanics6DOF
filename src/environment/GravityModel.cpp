@@ -10,5 +10,5 @@ Vector3D GravityModel::getGravity(double altitude) {
 
 	double currentG = g0 * (earthR / (earthR + h)) * (earthR / (earthR + h));
 
-	return Vector3D(0.0, -currentG, 0.0);
+	return Vector3D(0.0, 0.0, currentG);
 }
